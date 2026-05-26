@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Trade Journal</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080a0d;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;font-family:'JetBrains Mono','Fira Mono','Courier New',monospace}
+:root{--g:#00c97a;--r:#e8434f;--bg:#0d0f12;--s1:#13161a;--s2:#1a1d22;--bd:rgba(255,255,255,0.08);--mt:rgba(255,255,255,0.38);--lb:rgba(255,255,255,0.6)}
+.w{background:var(--bg);color:#e8e8e8;padding:20px;border-radius:16px;width:100%;max-width:960px;box-shadow:0 0 60px rgba(0,0,0,0.6)}
+.nav{display:flex;gap:4px;margin-bottom:18px;border-bottom:0.5px solid var(--bd);padding-bottom:14px;flex-wrap:wrap;align-items:center}
+.ntab{font-size:11px;padding:5px 12px;border-radius:6px;border:0.5px solid transparent;color:var(--mt);cursor:pointer;background:transparent;letter-spacing:0.06em;transition:all 0.15s}
+.ntab:hover{color:#e8e8e8}
+.ntab.on{background:var(--s2);border-color:var(--bd);color:#e8e8e8}
+.page{display:none}.page.on{display:block}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+@media(max-width:600px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--s1);border:0.5px solid var(--bd);border-radius:10px;padding:11px 13px}
+.slb{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mt);margin-bottom:5px}
+.sv{font-size:20px;font-weight:500;line-height:1}
+.ss{font-size:10px;color:var(--mt);margin-top:3px}
+.gn{color:var(--g)}.rd{color:var(--r)}
+.panel{background:var(--s1);border:0.5px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:10px}
+.plb{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mt);margin-bottom:10px}
+.crow{display:grid;grid-template-columns:1fr 220px;gap:10px;margin-bottom:10px}
+@media(max-width:600px){.crow{grid-template-columns:1fr}}
+.cal-h{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
+.cdh{font-size:8px;text-align:center;color:var(--mt);text-transform:uppercase}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cd{aspect-ratio:1;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:7.5px;cursor:pointer;border:0.5px solid transparent;transition:transform 0.1s}
+.cd:hover{transform:scale(1.1);z-index:2}
+.cd.emp{background:transparent;pointer-events:none}
+.cd.pos{background:rgba(0,201,122,0.16);border-color:rgba(0,201,122,0.22)}
+.cd.neg{background:rgba(232,67,79,0.16);border-color:rgba(232,67,79,0.22)}
+.cd.zer{background:var(--s2);border-color:var(--bd)}
+.cdn{color:var(--mt);font-size:7px}.cdv{font-weight:500;font-size:8px;margin-top:1px}
+.cd.pos .cdv{color:var(--g)}.cd.neg .cdv{color:var(--r)}
+.wr-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:6px;padding:10px 0}
+.wr-big{font-size:26px;font-weight:500;color:var(--g)}
+.wr-sub{font-size:9px;color:var(--mt);letter-spacing:0.1em;text-transform:uppercase}
+.wr-counts{display:flex;gap:20px;margin-top:4px}
+.wrc{text-align:center}.wrc-n{font-size:20px;font-weight:500}.wrc-l{font-size:9px;color:var(--mt)}
+.bot{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.bot{grid-template-columns:1fr}}
+.wkrow{display:grid;grid-template-columns:55px 1fr 65px;align-items:center;gap:8px;padding:5px 0;border-bottom:0.5px solid var(--bd)}
+.wkrow:last-child{border-bottom:none}
+.wkl{font-size:9px;color:var(--mt)}.wkv{font-size:10px;font-weight:500;text-align:right}
+.bar-bg{height:5px;border-radius:3px;background:var(--s2);overflow:hidden}
+.bar-f{height:100%;border-radius:3px}
+.trow{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--bd)}
+.trow:last-child{border-bottom:none}
+.tsym{font-size:11px;font-weight:500}
+.tbdg{font-size:8px;padding:2px 5px;border-radius:3px;margin-left:5px}
+.tl{background:rgba(0,201,122,0.13);color:var(--g)}.ts{background:rgba(232,67,79,0.13);color:var(--r)}
+.tdt{font-size:9px;color:var(--mt)}
+.tpnl{font-size:12px;font-weight:500}
+.scr{max-height:200px;overflow-y:auto}
+.scr::-webkit-scrollbar{width:2px}
+.scr::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px}
+.form-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.form-g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+.form-g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:500px){.form-g,.form-g3,.form-g4{grid-template-columns:1fr 1fr}}
+label{font-size:10px;color:var(--mt);display:block;margin-bottom:4px;letter-spacing:0.06em;text-transform:uppercase}
+input,select,textarea{background:var(--s2);border:0.5px solid var(--bd);border-radius:7px;color:#e8e8e8;font-family:inherit;font-size:12px;padding:8px 10px;width:100%;outline:none;transition:border 0.15s}
+input:focus,select:focus,textarea:focus{border-color:rgba(255,255,255,0.25)}
+select option{background:#1a1d22}
+textarea{resize:vertical;min-height:70px}
+.btn{background:var(--s2);border:0.5px solid var(--bd);border-radius:7px;color:#e8e8e8;font-family:inherit;font-size:11px;padding:9px 18px;cursor:pointer;letter-spacing:0.06em;transition:all 0.15s}
+.btn:hover{background:var(--s1);border-color:rgba(255,255,255,0.2)}
+.btn.primary{background:rgba(0,201,122,0.15);border-color:rgba(0,201,122,0.3);color:var(--g)}
+.btn.primary:hover{background:rgba(0,201,122,0.22)}
+.btn.danger{background:rgba(232,67,79,0.12);border-color:rgba(232,67,79,0.25);color:var(--r)}
+.row-end{display:flex;justify-content:flex-end;gap:8px}
+.csv-hint{font-size:10px;color:var(--mt);margin-bottom:8px;line-height:1.6}
+.csv-eg{font-size:9px;color:rgba(255,255,255,0.2);font-family:monospace;line-height:1.8}
+.note-day{background:var(--s2);border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:2px solid var(--bd)}
+.note-day.pos-day{border-left-color:var(--g)}
+.note-day.neg-day{border-left-color:var(--r)}
+.nd-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.nd-date{font-size:11px;font-weight:500}.nd-pnl{font-size:11px;font-weight:500}
+.nd-text{font-size:11px;color:var(--lb);line-height:1.5}
+.dd-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--bd)}
+.dd-row:last-child{border-bottom:none}
+.dd-date{font-size:10px;color:var(--mt)}.dd-val{font-size:11px;font-weight:500}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1d22;border:0.5px solid var(--g);border-radius:8px;padding:10px 16px;font-size:11px;color:var(--g);opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:999}
+.toast.show{opacity:1}
+.save-dot{width:6px;height:6px;border-radius:50%;background:var(--g);display:inline-block;margin-left:6px;opacity:0;transition:opacity 0.3s}
+.save-dot.show{opacity:1}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-nav-btns{display:flex;align-items:center;gap:4px}
+.mnav{background:var(--s2);border:0.5px solid var(--bd);border-radius:6px;color:#e8e8e8;font-family:inherit;font-size:13px;padding:3px 10px;cursor:pointer;transition:all 0.15s;line-height:1}
+.mnav:hover{background:var(--s1);border-color:rgba(255,255,255,0.2)}
+.mnav.today-btn{font-size:9px;letter-spacing:0.06em;padding:4px 10px}
+.mnav:disabled{opacity:0.25;cursor:default}
+.cal-nav-title{font-size:13px;font-weight:500;color:#e8e8e8;min-width:140px;text-align:center}
+.cal-month-pnl{font-size:11px;font-weight:500}
+/* Screenshot thumb */
+.thumb-wrap{position:relative;display:inline-block;margin-top:6px}
+.thumb{width:60px;height:40px;object-fit:cover;border-radius:4px;border:0.5px solid var(--bd);cursor:pointer;transition:opacity 0.15s}
+.thumb:hover{opacity:0.8}
+.thumb-del{position:absolute;top:-4px;right:-4px;background:var(--r);color:#fff;border:none;border-radius:50%;width:14px;height:14px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+/* Lightbox */
+.lb{position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+.lb img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,0.8)}
+.lb-close{position:fixed;top:20px;right:24px;color:#e8e8e8;font-size:24px;cursor:pointer;background:none;border:none;opacity:0.7}
+.lb-close:hover{opacity:1}
+/* Upload zone */
+.upload-zone{border:1px dashed var(--bd);border-radius:7px;padding:10px;text-align:center;cursor:pointer;transition:border 0.15s;font-size:10px;color:var(--mt)}
+.upload-zone:hover{border-color:rgba(255,255,255,0.2);color:var(--lb)}
+/* Symbol filter */
+.sym-filters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.sym-chip{font-size:10px;padding:3px 10px;border-radius:5px;border:0.5px solid var(--bd);color:var(--mt);cursor:pointer;background:transparent;transition:all 0.15s}
+.sym-chip:hover{color:#e8e8e8;border-color:rgba(255,255,255,0.2)}
+.sym-chip.on{background:var(--s2);color:#e8e8e8;border-color:rgba(255,255,255,0.2)}
+/* Summary page */
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+@media(max-width:500px){.sum-grid{grid-template-columns:1fr 1fr}}
+.sum-row{display:grid;grid-template-columns:110px 1fr 70px 55px 55px;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bd);font-size:11px}
+.sum-row:last-child{border-bottom:none}
+.sum-hdr{font-size:9px;color:var(--mt);letter-spacing:0.06em;text-transform:uppercase}
+.yr-block{margin-bottom:18px}
+.yr-title{font-size:11px;font-weight:500;color:var(--mt);margin-bottom:8px;letter-spacing:0.1em}
+.pnl-hint{font-size:9px;color:rgba(0,201,122,0.5);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="w">
+
+<!-- Special K Trader Logo -->
+<div style="display:flex;align-items:center;gap:16px;padding:0 0 16px 0;border-bottom:0.5px solid var(--bd);margin-bottom:16px">
+  <svg width="64" height="64" viewBox="0 0 200 200" style="flex-shrink:0">
+    <!-- Bowl shadow -->
+    <ellipse cx="101" cy="158" rx="62" ry="8" fill="#000" opacity="0.25"/>
+    <!-- Bowl outer -->
+    <path d="M38 108 Q40 158 100 168 Q160 158 162 108 Z" fill="#e8e0d0"/>
+    <!-- Bowl inner -->
+    <path d="M44 108 Q46 152 100 162 Q154 152 156 108 Z" fill="#f5f0e8"/>
+    <!-- Bowl rim -->
+    <ellipse cx="100" cy="108" rx="62" ry="14" fill="#ddd5c4"/>
+    <ellipse cx="100" cy="108" rx="56" ry="11" fill="#ede6d8"/>
+    <!-- Milk -->
+    <path d="M46 112 Q48 148 100 156 Q152 148 154 112 Z" fill="#f8f5f0" opacity="0.9"/>
+    <!-- Cereal pieces -->
+    <rect x="68" y="133" width="8" height="3" rx="1.5" fill="#C8860A" opacity="0.8"/>
+    <rect x="90" y="138" width="7" height="3" rx="1.5" fill="#C8860A" opacity="0.8"/>
+    <rect x="112" y="140" width="8" height="3" rx="1.5" fill="#C8860A" opacity="0.75"/>
+    <rect x="130" y="134" width="7" height="3" rx="1.5" fill="#C8860A" opacity="0.7"/>
+    <!-- Candlesticks -->
+    <line x1="72" y1="108" x2="72" y2="84" stroke="#ef5350" stroke-width="1.5"/>
+    <rect x="67" y="90" width="10" height="16" rx="1.5" fill="#ef5350"/>
+    <line x1="90" y1="109" x2="90" y2="66" stroke="#26a69a" stroke-width="1.5"/>
+    <rect x="85" y="76" width="10" height="28" rx="1.5" fill="#26a69a"/>
+    <line x1="108" y1="108" x2="108" y2="74" stroke="#ef5350" stroke-width="1.5"/>
+    <rect x="103" y="82" width="10" height="22" rx="1.5" fill="#ef5350"/>
+    <line x1="126" y1="109" x2="126" y2="52" stroke="#26a69a" stroke-width="1.5"/>
+    <rect x="121" y="64" width="10" height="40" rx="1.5" fill="#26a69a"/>
+    <!-- Optimum line -->
+    <line x1="62" y1="88" x2="142" y2="88" stroke="#34d399" stroke-width="0.8" stroke-dasharray="4 2" opacity="0.7"/>
+    <!-- Bowl rim highlight -->
+    <ellipse cx="100" cy="108" rx="56" ry="11" fill="none" stroke="#c8bfaf" stroke-width="1"/>
+  </svg>
+  <div>
+    <div style="font-size:20px;font-weight:700;color:#e8e8e8;letter-spacing:0.02em">Special K <span style="color:#00c97a">Trader</span></div>
+    <div style="font-size:10px;color:#e8434f;font-style:italic;margin-top:2px;letter-spacing:0.03em">"I eat stop losses for breakfast"</div>
+    <div style="font-size:9px;color:rgba(255,255,255,0.25);margin-top:4px;letter-spacing:0.08em;text-transform:uppercase">Trade Journal</div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="ntab on" onclick="nav('dash',this)">Dashboard</button>
+  <button class="ntab" onclick="nav('entry',this)">+ Log Trade</button>
+  <button class="ntab" onclick="nav('csv',this)">CSV Import</button>
+  <button class="ntab" onclick="nav('notes',this)">Daily Notes</button>
+  <button class="ntab" onclick="nav('dd',this)">Drawdown</button>
+  <button class="ntab" onclick="nav('summary',this)">Summary</button>
+  <div class="nav-right">
+    <span style="font-size:9px;color:var(--mt);display:flex;align-items:center">
+      <span class="save-dot" id="saveDot"></span>
+      <span id="saveLabel" style="margin-left:5px"></span>
+    </span>
+    <button class="btn danger" style="padding:4px 10px;font-size:9px" onclick="clearAllData()">Clear data</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="pg-dash" class="page on">
+  <div class="stats" id="stats"></div>
+  <div class="crow">
+    <div class="panel">
+      <div class="plb">Cumulative P&L</div>
+      <div style="position:relative;height:160px"><canvas id="pnlC">Cumulative P&L over time.</canvas></div>
+    </div>
+    <div class="panel">
+      <div class="plb">Win rate</div>
+      <div class="wr-wrap">
+        <div style="position:relative;width:90px;height:90px"><canvas id="winC" width="90" height="90">Win rate donut.</canvas></div>
+        <div class="wr-big" id="wrPct">—</div>
+        <div class="wr-sub">trade win rate</div>
+        <div class="wr-counts">
+          <div class="wrc"><div class="wrc-n gn" id="wrW">0</div><div class="wrc-l">WINS</div></div>
+          <div class="wrc"><div class="wrc-n rd" id="wrL">0</div><div class="wrc-l">LOSSES</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="cal-nav">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--mt)">Calendar</span>
+        <span class="cal-month-pnl" id="calMonthPnl"></span>
+      </div>
+      <div class="cal-nav-btns">
+        <button class="mnav" id="btnPrevM" onclick="shiftMonth(-1)">&#8592;</button>
+        <span class="cal-nav-title" id="calMonth"></span>
+        <button class="mnav" id="btnNextM" onclick="shiftMonth(1)">&#8594;</button>
+        <button class="mnav today-btn" onclick="goToday()">Today</button>
+      </div>
+    </div>
+    <div class="cal-h"><div class="cdh">Sun</div><div class="cdh">Mon</div><div class="cdh">Tue</div><div class="cdh">Wed</div><div class="cdh">Thu</div><div class="cdh">Fri</div><div class="cdh">Sat</div></div>
+    <div class="cal-g" id="calGrid"></div>
+  </div>
+  <div class="bot">
+    <div class="panel">
+      <div class="plb">Weekly breakdown</div>
+      <div id="wkRows"></div>
+    </div>
+    <div class="panel">
+      <div class="plb">Recent trades</div>
+      <div class="scr" id="tradeList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOG TRADE -->
+<div id="pg-entry" class="page">
+  <div class="panel">
+    <div class="plb">Log a trade</div>
+    <div class="form-g">
+      <div><label>Symbol</label><input id="f-sym" placeholder="e.g. NQ, ES, BTC"/></div>
+      <div><label>Date</label><input id="f-date" type="date"/></div>
+    </div>
+    <div class="form-g3">
+      <div><label>Direction</label><select id="f-side"><option value="long">Long</option><option value="short">Short</option></select></div>
+      <div><label>Contracts / Qty</label><input id="f-qty" type="number" placeholder="e.g. 0.01" step="any"/></div>
+      <div>
+        <label>P&L ($) <span class="pnl-hint">or use entry/exit below</span></label>
+        <input id="f-pnl" type="number" placeholder="e.g. 1250" oninput="clearEntryExit()"/>
+      </div>
+    </div>
+    <div class="form-g4">
+      <div><label>Entry Price</label><input id="f-entry" type="number" placeholder="e.g. 21500" step="any" oninput="calcPnl()"/></div>
+      <div><label>Exit Price</label><input id="f-exit" type="number" placeholder="e.g. 21625" step="any" oninput="calcPnl()"/></div>
+      <div><label>Tick Size</label><input id="f-tick" type="number" placeholder="e.g. 0.25" step="any" value="" oninput="calcPnl()"/></div>
+      <div><label>Tick Value ($)</label><input id="f-tickval" type="number" placeholder="e.g. 12.50" step="any" value="" oninput="calcPnl()"/></div>
+    </div>
+    <div class="form-g" style="margin-bottom:12px">
+      <div>
+        <label>Trade Currency <span class="pnl-hint">currency your broker shows</span></label>
+        <select id="f-currency" onchange="fetchLiveRate()">
+          <option value="USD">USD — US Dollar</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="JPY">JPY — Japanese Yen</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+          <option value="NZD">NZD — New Zealand Dollar</option>
+          <option value="SGD">SGD — Singapore Dollar</option>
+          <option value="CHF">CHF — Swiss Franc</option>
+          <option value="OTHER">Other</option>
+        </select>
+      </div>
+      <div>
+        <label>FX Rate <span class="pnl-hint">to convert to USD (leave 1 if USD)</span></label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input id="f-fxrate" type="number" placeholder="e.g. 1.39 for AUD" step="any" value="1" oninput="calcPnl()" style="flex:1"/>
+          <button class="btn" style="padding:7px 10px;font-size:10px;white-space:nowrap" onclick="fetchLiveRate()" id="fxBtn">⟳ Live rate</button>
+        </div>
+        <div id="fxHint" style="font-size:9px;color:var(--mt);margin-top:4px"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label>Chart Screenshot (optional)</label>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('f-img').click()">
+        📷 Click to attach a chart screenshot
+      </div>
+      <input type="file" id="f-img" accept="image/*" style="display:none" onchange="handleImg(this)"/>
+      <div id="imgPreview" style="margin-top:6px"></div>
+    </div>
+    <div style="margin-bottom:12px"><label>Notes (optional)</label><textarea id="f-notes" placeholder="Setup, emotions, lessons learned..."></textarea></div>
+    <div class="row-end">
+      <button class="btn" onclick="clearForm()">Clear</button>
+      <button class="btn primary" id="logBtn" onclick="logTrade()">Log trade</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="plb" style="margin-bottom:0">All trades <span style="color:#e8e8e8" id="tradeCount"></span></div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <span style="font-size:9px;color:var(--mt)">Sort:</span>
+        <button class="sym-chip on" id="sort-new" onclick="setSort('new',this)">Newest</button>
+        <button class="sym-chip" id="sort-old" onclick="setSort('old',this)">Oldest</button>
+        <button class="sym-chip" id="sort-pnl" onclick="setSort('pnl',this)">Best P&L</button>
+      </div>
+    </div>
+    <div class="sym-filters" id="symFilters"></div>
+    <div class="scr" id="allTrades"></div>
+  </div>
+</div>
+
+<!-- CSV IMPORT -->
+<div id="pg-csv" class="page">
+  <div class="panel">
+    <div class="plb">CSV Import</div>
+    <div class="csv-hint">Paste CSV with columns: <strong style="color:#e8e8e8">date, symbol, side, pnl</strong> (optional: qty, entry, exit, notes). First row = header.</div>
+    <div class="csv-eg">date,symbol,side,pnl,qty,entry,exit,notes<br>2025-04-02,NQ,long,1250,2,21500,21625,Clean breakout<br>2025-04-03,ES,short,-420,1,5200,5242,Stopped out</div>
+    <div style="margin-top:12px;margin-bottom:12px"><textarea id="csv-input" style="min-height:130px;font-size:10px" placeholder="Paste your CSV here..."></textarea></div>
+    <div id="csv-preview" style="margin-bottom:12px"></div>
+    <div class="row-end">
+      <button class="btn" onclick="previewCSV()">Preview</button>
+      <button class="btn primary" onclick="importCSV()">Import all</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAILY NOTES -->
+<div id="pg-notes" class="page">
+  <div class="panel">
+    <div class="plb">Add / edit note</div>
+    <div class="form-g">
+      <div><label>Date</label><input id="n-date" type="date"/></div>
+      <div><label>Mood</label>
+        <select id="n-mood">
+          <option value="">—</option>
+          <option>Focused</option><option>Anxious</option><option>Overconfident</option>
+          <option>Patient</option><option>Frustrated</option><option>Disciplined</option>
+        </select>
+      </div>
+    </div>
+    <div style="margin-bottom:12px"><label>Note</label><textarea id="n-text" placeholder="What happened today? What did you learn?"></textarea></div>
+    <div class="row-end"><button class="btn primary" onclick="saveNote()">Save note</button></div>
+  </div>
+  <div class="panel">
+    <div class="plb">Journal entries</div>
+    <div id="noteList"><div style="font-size:11px;color:var(--mt)">No notes yet.</div></div>
+  </div>
+</div>
+
+<!-- DRAWDOWN -->
+<div id="pg-dd" class="page">
+  <div class="stats" id="dd-stats"></div>
+  <div class="panel">
+    <div class="plb">Drawdown curve</div>
+    <div style="position:relative;height:180px"><canvas id="ddC">Drawdown over time.</canvas></div>
+  </div>
+  <div class="panel">
+    <div class="plb">Drawdown events</div>
+    <div class="scr" id="ddEvents"><div style="font-size:11px;color:var(--mt)">No trades yet.</div></div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div id="pg-summary" class="page">
+  <div id="summaryContent"></div>
+</div>
+
+</div><!-- .w -->
+
+<!-- LIGHTBOX -->
+<div class="lb" id="lb" style="display:none" onclick="closeLb()">
+  <button class="lb-close" onclick="closeLb()">✕</button>
+  <img id="lbImg" src="" alt="Trade screenshot"/>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const TRADES_KEY='tj_trades_v1';
+const NOTES_KEY='tj_notes_v1';
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function loadData(){
+  try{
+    const t=localStorage.getItem(TRADES_KEY),n=localStorage.getItem(NOTES_KEY);
+    const raw=t?JSON.parse(t):[];
+    const trades=raw.map((tr,i)=>({entry:null,exit:null,screenshot:null,note:'',...tr,id:tr.id||Date.now()+i}));
+    return{trades,notes:n?JSON.parse(n):{}};
+  }catch(e){return{trades:[],notes:{}};}
+}
+function saveData(){
+  try{localStorage.setItem(TRADES_KEY,JSON.stringify(trades));localStorage.setItem(NOTES_KEY,JSON.stringify(notes));flashSave();}
+  catch(e){showToast('Storage full — try removing old screenshots');}
+}
+function flashSave(){
+  const dot=document.getElementById('saveDot'),lbl=document.getElementById('saveLabel');
+  dot.classList.add('show');lbl.textContent='saved';
+  clearTimeout(window._st);window._st=setTimeout(()=>{dot.classList.remove('show');lbl.textContent='';},2000);
+}
+function clearAllData(){
+  if(!confirm('Delete ALL trades and notes? This cannot be undone.'))return;
+  trades=[];notes={};saveData();
+  const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth();
+  symFilter='ALL';pendingImg=null;
+  renderDash();renderAllTrades();renderNotes();renderDD();showToast('All data cleared');
+}
+
+let {trades,notes}=loadData();
+let pendingImg=null;
+let symFilter='ALL';
+let tradeSort='new';
+
+
+
+if(!trades.length){
+  trades=[
+    {id:1,date:'2025-04-02',sym:'NQ',side:'long',pnl:25600,qty:2,entry:21500,exit:21750,screenshot:null,note:'Strong breakout above VWAP'},
+    {id:2,date:'2025-04-03',sym:'ES',side:'short',pnl:10300,qty:1,entry:5300,exit:5248,screenshot:null,note:''},
+    {id:3,date:'2025-04-04',sym:'NQ',side:'long',pnl:19400,qty:2,entry:21600,exit:21700,screenshot:null,note:'Gap fill setup worked'},
+    {id:4,date:'2025-04-05',sym:'CL',side:'long',pnl:8330,qty:1,entry:72.5,exit:74.2,screenshot:null,note:''},
+    {id:5,date:'2025-04-06',sym:'ES',side:'long',pnl:2150,qty:1,entry:5250,exit:5263,screenshot:null,note:''},
+    {id:6,date:'2025-04-09',sym:'NQ',side:'long',pnl:544,qty:1,entry:21400,exit:21420,screenshot:null,note:'Small scalp'},
+    {id:7,date:'2025-04-11',sym:'MNQ',side:'short',pnl:20700,qty:4,entry:21800,exit:21600,screenshot:null,note:''},
+    {id:8,date:'2025-04-12',sym:'NQ',side:'long',pnl:3890,qty:1,entry:21450,exit:21475,screenshot:null,note:''},
+    {id:9,date:'2025-04-13',sym:'ES',side:'long',pnl:28900,qty:2,entry:5200,exit:5289,screenshot:null,note:'Best trade of month'},
+    {id:10,date:'2025-04-16',sym:'NQ',side:'long',pnl:49500,qty:3,entry:21300,exit:21600,screenshot:null,note:'Trend day — held full position'},
+    {id:11,date:'2025-04-17',sym:'CL',side:'short',pnl:18600,qty:2,entry:75,exit:72.8,screenshot:null,note:''},
+    {id:12,date:'2025-04-18',sym:'ES',side:'long',pnl:11600,qty:1,entry:5180,exit:5226,screenshot:null,note:''},
+    {id:13,date:'2025-04-19',sym:'NQ',side:'long',pnl:15900,qty:2,entry:21200,exit:21340,screenshot:null,note:''},
+    {id:14,date:'2025-04-23',sym:'MES',side:'long',pnl:31100,qty:5,entry:5150,exit:5218,screenshot:null,note:''},
+    {id:15,date:'2025-04-24',sym:'NQ',side:'long',pnl:527,qty:1,entry:21350,exit:21358,screenshot:null,note:''},
+    {id:16,date:'2025-04-25',sym:'ES',side:'short',pnl:-3170,qty:1,entry:5220,exit:5251,screenshot:null,note:'Stopped out — news spike'},
+    {id:17,date:'2025-04-27',sym:'CL',side:'short',pnl:-5170,qty:2,entry:73,exit:75.3,screenshot:null,note:'Revenge trade — avoid this'}
+  ];
+  notes={
+    '2025-04-02':{mood:'Focused',text:'Good session, stuck to the plan. VWAP strategy working well.'},
+    '2025-04-16':{mood:'Patient',text:'Trend day — waited for the right entry and held through pullbacks.'},
+    '2025-04-25':{mood:'Frustrated',text:'Should have sized up more but playing it safe after the loss.'},
+    '2025-04-27':{mood:'Frustrated',text:'Revenge traded after the stop out. Need better discipline.'}
+  };
+  saveData();
+}
+
+function defaultCalMonth(){
+  if(!trades.length){const n=new Date();return{y:n.getFullYear(),m:n.getMonth()};}
+  const latest=trades.map(t=>t.date).sort().reverse()[0];
+  const d=new Date(latest+'T00:00:00');return{y:d.getFullYear(),m:d.getMonth()};
+}
+let {y:calYear,m:calMonth}=defaultCalMonth();
+let pnlI=null,winI=null,ddI=null;
+
+function fmt(v,short){
+  if(short&&Math.abs(v)>=1000)return(v<0?'-':'')+'$'+(Math.abs(v)/1000).toFixed(1)+'K';
+  return(v<0?'-':'')+'$'+Math.abs(v).toLocaleString();
+}
+function fmtDate(d){const p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0].slice(2);}
+function showToast(msg,isErr){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.borderColor=isErr?'var(--r)':'var(--g)';t.style.color=isErr?'var(--r)':'var(--g)';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);
+}
+function nav(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('pg-'+id).classList.add('on');el.classList.add('on');
+  if(id==='dash')renderDash();
+  if(id==='entry')renderAllTrades();
+  if(id==='notes')renderNotes();
+  if(id==='dd')renderDD();
+  if(id==='summary')renderSummary();
+}
+
+// ---- ENTRY/EXIT P&L CALC ----
+function calcPnl(){
+  const entry=parseFloat(document.getElementById('f-entry').value);
+  const exit=parseFloat(document.getElementById('f-exit').value);
+  const qty=parseFloat(document.getElementById('f-qty').value)||1;
+  const tick=parseFloat(document.getElementById('f-tick').value);
+  const tickval=parseFloat(document.getElementById('f-tickval').value);
+  const side=document.getElementById('f-side').value;
+  const fxrate=parseFloat(document.getElementById('f-fxrate').value)||1;
+  const currency=document.getElementById('f-currency').value;
+  if(isNaN(entry)||isNaN(exit))return;
+  let pnlUSD;
+  if(!isNaN(tick)&&!isNaN(tickval)&&tick>0){
+    const ticks=Math.abs(exit-entry)/tick;
+    pnlUSD=(side==='long'?1:-1)*ticks*tickval*qty;
+  } else {
+    pnlUSD=(side==='long'?exit-entry:entry-exit)*qty;
+  }
+  const pnl=currency==='USD'?pnlUSD:parseFloat((pnlUSD*fxrate).toFixed(2));
+  document.getElementById('f-pnl').value=parseFloat(pnl.toFixed(2));
+  updateFxHint();
+}
+async function fetchLiveRate(){
+  const currency = document.getElementById('f-currency').value;
+  if(currency === 'USD'){showToast('Already in USD — no conversion needed');return;}
+  const btn = document.getElementById('fxBtn');
+  btn.textContent = '...';btn.disabled = true;
+  try{
+    const res = await fetch(`https://open.er-api.com/v6/latest/USD`);
+    const data = await res.json();
+    if(data.rates && data.rates[currency]){
+      const rate = parseFloat(data.rates[currency].toFixed(4));
+      document.getElementById('f-fxrate').value = rate;
+      updateFxHint();
+      calcPnl();
+      showToast(`Live rate: 1 USD = ${rate} ${currency}`);
+    } else {
+      showToast('Rate not found for '+currency, true);
+    }
+  } catch(e){
+    showToast('Could not fetch rate — check connection', true);
+  }
+  btn.textContent = '⟳ Live rate';btn.disabled = false;
+}
+function updateFxHint(){
+  const currency=document.getElementById('f-currency').value;
+  const fxrate=parseFloat(document.getElementById('f-fxrate').value)||1;
+  const hint=document.getElementById('fxHint');
+  if(currency==='USD'){hint.textContent='No conversion needed';return;}
+  hint.textContent='1 USD = '+fxrate+' '+currency+' — P&L will show in '+currency;
+}
+function clearEntryExit(){
+  document.getElementById('f-entry').value='';
+  document.getElementById('f-exit').value='';
+}
+
+// ---- IMAGE HANDLING ----
+function handleImg(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    pendingImg=e.target.result;
+    document.getElementById('imgPreview').innerHTML=`
+      <div class="thumb-wrap">
+        <img class="thumb" src="${pendingImg}" onclick="openLb('${pendingImg}')" title="Click to preview"/>
+        <button class="thumb-del" onclick="clearImg()" title="Remove">✕</button>
+      </div>`;
+    document.getElementById('uploadZone').textContent='✓ Screenshot attached';
+  };
+  reader.readAsDataURL(file);
+}
+function clearImg(){
+  pendingImg=null;
+  document.getElementById('imgPreview').innerHTML='';
+  document.getElementById('uploadZone').textContent='📷 Click to attach a chart screenshot';
+  document.getElementById('f-img').value='';
+}
+function openLb(src){
+  document.getElementById('lbImg').src=src;
+  document.getElementById('lb').style.display='flex';
+}
+function closeLb(){document.getElementById('lb').style.display='none';}
+
+// ---- SYMBOL FILTER ----
+function buildSymFilters(){
+  const syms=['ALL',...new Set(trades.map(t=>t.sym).sort())];
+  document.getElementById('symFilters').innerHTML=syms.map(s=>`
+    <button class="sym-chip ${symFilter===s?'on':''}" onclick="setSym('${s}')">${s}</button>`).join('');
+}
+function setSym(s){symFilter=s;buildSymFilters();renderAllTrades();}
+
+// ---- CALENDAR ----
+function shiftMonth(dir){
+  calMonth+=dir;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  renderCal(getByDate());updateMonthNav();
+}
+function goToday(){
+  const n=new Date();calYear=n.getFullYear();calMonth=n.getMonth();
+  renderCal(getByDate());updateMonthNav();
+}
+function updateMonthNav(){
+  document.getElementById('calMonth').textContent=MN[calMonth]+' '+calYear;
+  // Only block going before year 2000 or more than 12 months into the future
+  const now=new Date();
+  const cur=new Date(calYear,calMonth,1);
+  const minDate=new Date(2000,0,1);
+  const maxDate=new Date(now.getFullYear(),now.getMonth()+12,1);
+  document.getElementById('btnPrevM').disabled=cur<=minDate;
+  document.getElementById('btnNextM').disabled=cur>=maxDate;
+}
+function getByDate(){
+  const byDate={};
+  trades.forEach(t=>{if(!byDate[t.date])byDate[t.date]={pnl:0,count:0};byDate[t.date].pnl+=t.pnl;byDate[t.date].count++;});
+  return byDate;
+}
+
+// ---- DASHBOARD ----
+function renderDash(){
+  const byDate=getByDate();
+  const days=Object.keys(byDate).sort();
+  const total=trades.reduce((s,t)=>s+t.pnl,0);
+  const dayVals=days.map(d=>byDate[d].pnl);
+  const wins=trades.filter(t=>t.pnl>0).length;
+  const losses=trades.filter(t=>t.pnl<0).length;
+  const wr=trades.length?Math.round(wins/trades.length*100):0;
+  const best=dayVals.length?Math.max(...dayVals):0;
+  const avgW=wins?trades.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0)/wins:0;
+  const avgL=losses?Math.abs(trades.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0)/losses):1;
+  const rr=(avgL>0?(avgW/avgL):0).toFixed(2);
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="slb">Net P&L</div><div class="sv ${total>=0?'gn':'rd'}">${total>=0?'':'-'}${fmt(Math.abs(total),true)}</div><div class="ss">${trades.length} trades</div></div>
+    <div class="stat"><div class="slb">Win Rate</div><div class="sv ${wr>=50?'gn':'rd'}">${wr}%</div><div class="ss">${wins}W / ${losses}L</div></div>
+    <div class="stat"><div class="slb">Best Day</div><div class="sv ${best>=0?'gn':'rd'}">${fmt(best,true)}</div><div class="ss">single session</div></div>
+    <div class="stat"><div class="slb">Avg R:R</div><div class="sv">${rr}</div><div class="ss">reward / risk</div></div>`;
+  document.getElementById('wrPct').textContent=wr+'%';
+  document.getElementById('wrW').textContent=wins;
+  document.getElementById('wrL').textContent=losses;
+  renderWin(wins,losses);renderPnl(days,byDate);renderCal(byDate);renderWeekly(byDate);renderTrades();updateMonthNav();
+}
+function renderPnl(days,byDate){
+  if(pnlI)pnlI.destroy();
+  let cum=0;const labels=[],vals=[];
+  days.forEach(d=>{cum+=byDate[d].pnl;labels.push(fmtDate(d));vals.push(cum);});
+  const ctx=document.getElementById('pnlC').getContext('2d');
+  const gr=ctx.createLinearGradient(0,0,0,160);
+  gr.addColorStop(0,'rgba(0,201,122,0.2)');gr.addColorStop(1,'rgba(0,201,122,0)');
+  pnlI=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:vals,borderColor:'#00c97a',borderWidth:1.5,tension:0.3,pointRadius:0,fill:true,backgroundColor:gr}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+Math.round(c.raw).toLocaleString()}}},scales:{x:{ticks:{color:'rgba(255,255,255,0.28)',font:{size:8},maxRotation:0,autoSkip:true,maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'rgba(255,255,255,0.28)',font:{size:8},callback:v=>'$'+(Math.abs(v)>=1000?(v/1000).toFixed(0)+'K':v)},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+}
+function renderWin(w,l){
+  if(winI)winI.destroy();
+  const ctx=document.getElementById('winC').getContext('2d');
+  winI=new Chart(ctx,{type:'doughnut',data:{datasets:[{data:w+l>0?[w,l]:[1,0],backgroundColor:['#00c97a','rgba(232,67,79,0.65)'],borderWidth:0,borderRadius:3}]},options:{responsive:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+}
+function renderCal(byDate){
+  const y=calYear,m=calMonth;
+  document.getElementById('calMonth').textContent=MN[m]+' '+y;
+  const first=new Date(y,m,1);const last=new Date(y,m+1,0).getDate();
+  let monthPnl=0;
+  for(let d=1;d<=last;d++){
+    const key=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    if(byDate[key])monthPnl+=byDate[key].pnl;
+  }
+  const mpEl=document.getElementById('calMonthPnl');
+  if(monthPnl!==0){mpEl.textContent=(monthPnl>=0?'+':'')+fmt(monthPnl,true);mpEl.style.color=monthPnl>=0?'var(--g)':'var(--r)';}
+  else mpEl.textContent='';
+  let html='';
+  for(let i=0;i<first.getDay();i++)html+='<div class="cd emp"></div>';
+  for(let d=1;d<=last;d++){
+    const key=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const day=byDate[key];let cls='zer',val='';
+    if(day){cls=day.pnl>0?'pos':'neg';val=fmt(day.pnl,true);}
+    html+=`<div class="cd ${cls}" title="${key}${day?' | '+fmt(day.pnl):' | No trade'}"><span class="cdn">${d}</span>${val?`<span class="cdv">${val}</span>`:''}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML=html;
+}
+function renderWeekly(byDate){
+  const wks={};
+  Object.keys(byDate).sort().forEach(d=>{
+    const dt=new Date(d+'T00:00:00');const sun=new Date(dt);sun.setDate(dt.getDate()-dt.getDay());
+    const key=sun.toISOString().slice(0,10);
+    if(!wks[key])wks[key]=0;wks[key]+=byDate[d].pnl;
+  });
+  const entries=Object.entries(wks).sort((a,b)=>a[0]>b[0]?1:-1);
+  const max=Math.max(...entries.map(e=>Math.abs(e[1])),1);let i=1;
+  document.getElementById('wkRows').innerHTML=entries.length?entries.map(([,v])=>`
+    <div class="wkrow"><div class="wkl">Week ${i++}</div>
+    <div class="bar-bg"><div class="bar-f" style="width:${Math.round(Math.abs(v)/max*100)}%;background:${v>=0?'var(--g)':'var(--r)'}"></div></div>
+    <div class="wkv ${v>=0?'gn':'rd'}">${fmt(v,true)}</div></div>`).join(''):'<div style="font-size:11px;color:var(--mt)">No data.</div>';
+}
+function renderTrades(){
+  const sorted=[...trades].sort((a,b)=>b.date>a.date?1:-1).slice(0,12);
+  document.getElementById('tradeList').innerHTML=sorted.length?sorted.map(t=>`
+    <div class="trow">
+      <div style="display:flex;align-items:center;gap:4px">
+        ${t.screenshot?`<img class="thumb" src="${t.screenshot}" style="width:36px;height:26px;margin-right:4px" onclick="openLb('${t.screenshot}')" title="View chart"/>`:'' }
+        <div><span class="tsym">${t.sym}</span><span class="tbdg ${t.side==='long'?'tl':'ts'}">${t.side.toUpperCase()}</span><div class="tdt">${fmtDate(t.date)}</div></div>
+      </div>
+      <div class="tpnl ${t.pnl>=0?'gn':'rd'}">${t.pnl>=0?'+':''}${fmt(t.pnl,true)}</div>
+    </div>`).join(''):'<div style="font-size:11px;color:var(--mt)">No trades yet.</div>';
+}
+
+function setSort(s,el){
+  tradeSort=s;
+  document.querySelectorAll('#sort-new,#sort-old,#sort-pnl').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderAllTrades();
+}
+
+// ---- ALL TRADES (entry page) ----
+function renderAllTrades(){
+  buildSymFilters();
+  const filtered=symFilter==='ALL'?trades:trades.filter(t=>t.sym===symFilter);
+  let sorted=[...filtered];
+  if(tradeSort==='new') sorted.sort((a,b)=>b.date>a.date?1:b.date<a.date?-1:0);
+  else if(tradeSort==='old') sorted.sort((a,b)=>a.date>b.date?1:a.date<b.date?-1:0);
+  else if(tradeSort==='pnl') sorted.sort((a,b)=>b.pnl-a.pnl);
+  document.getElementById('tradeCount').textContent='('+sorted.length+(symFilter!=='ALL'?' filtered':'')+'/'+(trades.length)+')';
+  document.getElementById('allTrades').innerHTML=sorted.length?sorted.map(t=>`
+    <div class="trow" id="trow-${t.id}">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        ${t.screenshot?`<div class="thumb-wrap" style="margin-top:2px"><img class="thumb" src="${t.screenshot}" onclick="openLb('${t.screenshot}')" title="View chart"/></div>`:''}
+        <div>
+          <span class="tsym">${t.sym}</span><span class="tbdg ${t.side==='long'?'tl':'ts'}">${t.side.toUpperCase()}</span>
+          <div class="tdt">${fmtDate(t.date)}${t.qty?' · '+t.qty+' ct':''}${t.entry&&t.exit?` · ${t.entry} → ${t.exit}`:''}${t.currency&&t.currency!=='USD'?` · <span style="color:rgba(255,200,0,0.6)">${t.currency}</span>`:''}</div>
+          ${t.note?`<div style="font-size:9px;color:var(--mt);margin-top:2px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.note}</div>`:''}
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="tpnl ${t.pnl>=0?'gn':'rd'}">${t.pnl>=0?'+':''}${fmt(t.pnl,true)}</div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:3px">
+          <div style="font-size:9px;color:rgba(0,201,122,0.6);cursor:pointer" onclick="editTrade(${t.id})">✎ edit</div>
+          <div style="font-size:9px;color:var(--mt);cursor:pointer" onclick="deleteTrade(${t.id})">✕ remove</div>
+        </div>
+      </div>
+    </div>`).join(''):'<div style="font-size:11px;color:var(--mt)">No trades match filter.</div>';
+}
+function editTrade(id){
+  const t=trades.find(x=>x.id===id);if(!t)return;
+  document.getElementById('f-sym').value=t.sym;
+  document.getElementById('f-date').value=t.date;
+  document.getElementById('f-side').value=t.side;
+  document.getElementById('f-pnl').value=t.pnl;
+  document.getElementById('f-qty').value=t.qty||1;
+  document.getElementById('f-entry').value=t.entry||'';
+  document.getElementById('f-exit').value=t.exit||'';
+  document.getElementById('f-currency').value=t.currency||'USD';
+  document.getElementById('f-fxrate').value=t.fxrate||1;
+  updateFxHint();
+  document.getElementById('f-notes').value=t.note||'';
+  if(t.screenshot){
+    pendingImg=t.screenshot;
+    document.getElementById('imgPreview').innerHTML=`<div class="thumb-wrap"><img class="thumb" src="${pendingImg}" onclick="openLb('${pendingImg}')"/><button class="thumb-del" onclick="clearImg()">✕</button></div>`;
+    document.getElementById('uploadZone').textContent='✓ Screenshot attached';
+  }
+  const btn=document.getElementById('logBtn');
+  btn.textContent='Save changes';btn.onclick=()=>saveEdit(id);
+  document.getElementById('pg-entry').scrollIntoView({behavior:'smooth'});
+  showToast('Editing '+t.sym+' — make changes and save');
+}
+function saveEdit(id){
+  const sym=document.getElementById('f-sym').value.trim().toUpperCase();
+  const date=document.getElementById('f-date').value;
+  const side=document.getElementById('f-side').value;
+  const pnl=parseFloat(document.getElementById('f-pnl').value);
+  const qty=parseFloat(document.getElementById('f-qty').value)||1;
+  const entry=parseFloat(document.getElementById('f-entry').value)||null;
+  const exit=parseFloat(document.getElementById('f-exit').value)||null;
+  const currency=document.getElementById('f-currency').value||'USD';
+  const fxrate=parseFloat(document.getElementById('f-fxrate').value)||1;
+  const note=document.getElementById('f-notes').value.trim();
+  if(!sym||!date||isNaN(pnl)){showToast('Fill in symbol, date & P&L',true);return;}
+  const idx=trades.findIndex(x=>x.id===id);
+  if(idx>=0)trades[idx]={...trades[idx],sym,date,side,pnl,qty,entry,exit,currency,fxrate,note,screenshot:pendingImg!==undefined?pendingImg:trades[idx].screenshot};
+  saveData();
+  const btn=document.getElementById('logBtn');
+  btn.textContent='Log trade';btn.onclick=logTrade;
+  pendingImg=null;clearForm();renderAllTrades();showToast('Trade updated');
+}
+function logTrade(){
+  const sym=document.getElementById('f-sym').value.trim().toUpperCase();
+  const date=document.getElementById('f-date').value;
+  const side=document.getElementById('f-side').value;
+  const pnl=parseFloat(document.getElementById('f-pnl').value);
+  const qty=parseFloat(document.getElementById('f-qty').value)||1;
+  const entry=parseFloat(document.getElementById('f-entry').value)||null;
+  const exit=parseFloat(document.getElementById('f-exit').value)||null;
+  const currency=document.getElementById('f-currency').value||'USD';
+  const fxrate=parseFloat(document.getElementById('f-fxrate').value)||1;
+  const note=document.getElementById('f-notes').value.trim();
+  if(!sym||!date||isNaN(pnl)){showToast('Fill in symbol, date & P&L',true);return;}
+  trades.push({id:Date.now(),date,sym,side,pnl,qty,entry,exit,currency,fxrate,screenshot:pendingImg||null,note});
+  if(note&&!notes[date])notes[date]={mood:'',text:note};
+  saveData();pendingImg=null;clearForm();renderAllTrades();showToast('Logged: '+sym+' '+fmt(pnl,true));
+}
+function clearForm(){
+  ['f-sym','f-pnl','f-qty','f-notes','f-entry','f-exit','f-tick','f-tickval','f-fxrate'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('f-currency').value='USD';
+  document.getElementById('f-fxrate').value='1';
+  document.getElementById('fxHint').textContent='';
+  clearImg();
+  const btn=document.getElementById('logBtn');btn.textContent='Log trade';btn.onclick=logTrade;
+}
+function deleteTrade(id){
+  trades=trades.filter(t=>t.id!==id);saveData();renderAllTrades();showToast('Trade removed');
+}
+
+// ---- CSV ----
+function previewCSV(){
+  const raw=document.getElementById('csv-input').value.trim();if(!raw)return;
+  const rows=raw.split('\n').map(r=>r.split(',').map(c=>c.trim()));
+  const hdr=rows[0].map(h=>h.toLowerCase());
+  const di=hdr.indexOf('date'),si=hdr.indexOf('symbol'),sd=hdr.indexOf('side'),pi=hdr.indexOf('pnl');
+  if(di<0||si<0||sd<0||pi<0){document.getElementById('csv-preview').innerHTML='<div style="font-size:10px;color:var(--r)">Missing columns: date, symbol, side, pnl</div>';return;}
+  const preview=rows.slice(1,4).map(r=>`<div class="trow"><span class="tsym">${r[si]||'?'}</span><span class="tbdg ${(r[sd]||'').toLowerCase()==='long'?'tl':'ts'}">${(r[sd]||'').toUpperCase()}</span><span style="font-size:10px;color:var(--mt);margin-left:8px">${r[di]}</span><span class="tpnl ${parseFloat(r[pi])>=0?'gn':'rd'}" style="margin-left:auto">${fmt(parseFloat(r[pi])||0,true)}</span></div>`).join('');
+  document.getElementById('csv-preview').innerHTML=`<div style="font-size:9px;color:var(--mt);margin-bottom:6px">${rows.length-1} rows detected — preview:</div>${preview}`;
+}
+function importCSV(){
+  const raw=document.getElementById('csv-input').value.trim();if(!raw)return;
+  const rows=raw.split('\n').map(r=>r.split(',').map(c=>c.trim()));
+  const hdr=rows[0].map(h=>h.toLowerCase());
+  const di=hdr.indexOf('date'),si=hdr.indexOf('symbol'),sd=hdr.indexOf('side'),pi=hdr.indexOf('pnl');
+  const qi=hdr.indexOf('qty'),ni=hdr.indexOf('notes'),ei=hdr.indexOf('entry'),xi=hdr.indexOf('exit');
+  if(di<0||si<0||sd<0||pi<0){showToast('Missing required columns',true);return;}
+  let added=0;
+  rows.slice(1).forEach(r=>{
+    const pnl=parseFloat(r[pi]);if(!r[di]||!r[si]||isNaN(pnl))return;
+    trades.push({id:Date.now()+Math.random(),date:r[di],sym:r[si].toUpperCase(),side:(r[sd]||'long').toLowerCase(),pnl,qty:parseFloat(r[qi])||1,entry:ei>=0?parseFloat(r[ei])||null:null,exit:xi>=0?parseFloat(r[xi])||null:null,screenshot:null,note:ni>=0?r[ni]||'':''});
+    added++;
+  });
+  saveData();document.getElementById('csv-input').value='';document.getElementById('csv-preview').innerHTML='';
+  showToast(added+' trades imported & saved');
+}
+
+// ---- NOTES ----
+function saveNote(){
+  const date=document.getElementById('n-date').value;
+  const mood=document.getElementById('n-mood').value;
+  const text=document.getElementById('n-text').value.trim();
+  if(!date||!text){showToast('Pick a date and write a note',true);return;}
+  notes[date]={mood,text};saveData();
+  document.getElementById('n-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('n-text').value='';document.getElementById('n-mood').value='';
+  renderNotes();showToast('Note saved');
+}
+function renderNotes(){
+  const byDate={};trades.forEach(t=>{if(!byDate[t.date])byDate[t.date]=0;byDate[t.date]+=t.pnl;});
+  const dated=Object.keys(notes).sort().reverse();
+  if(!dated.length){document.getElementById('noteList').innerHTML='<div style="font-size:11px;color:var(--mt)">No notes yet.</div>';return;}
+  document.getElementById('noteList').innerHTML=dated.map(d=>{
+    const n=notes[d],pnl=byDate[d];const cls=pnl>0?'pos-day':pnl<0?'neg-day':'';
+    return`<div class="note-day ${cls}"><div class="nd-hd"><div class="nd-date">${fmtDate(d)}${n.mood?` · <span style="color:var(--mt);font-size:9px">${n.mood}</span>`:''}</div>${pnl!==undefined?`<div class="nd-pnl ${pnl>=0?'gn':'rd'}">${pnl>=0?'+':''}${fmt(pnl,true)}</div>`:''}</div><div class="nd-text">${n.text}</div></div>`;
+  }).join('');
+}
+
+// ---- DRAWDOWN ----
+function renderDD(){
+  const byDate={};trades.forEach(t=>{if(!byDate[t.date])byDate[t.date]=0;byDate[t.date]+=t.pnl;});
+  const days=Object.keys(byDate).sort();
+  let peak=0,cum=0,maxDD=0;const labels=[],ddVals=[],events=[];let ddStart=null;
+  days.forEach(d=>{
+    cum+=byDate[d];if(cum>peak){if(ddStart&&cum>=peak)ddStart=null;peak=cum;}
+    const dd=peak>0?((cum-peak)/peak*100):0;
+    if(dd<-0.5&&!ddStart)ddStart={date:d};
+    if(dd>=0&&ddStart){events.push({start:ddStart.date,end:d});ddStart=null;}
+    if(dd<maxDD)maxDD=dd;
+    labels.push(fmtDate(d));ddVals.push(parseFloat(dd.toFixed(2)));
+  });
+  const maxDDAbs=peak>0?Math.abs(maxDD/100*peak):0;const recovering=days.length&&cum<peak;
+  document.getElementById('dd-stats').innerHTML=`
+    <div class="stat"><div class="slb">Max Drawdown</div><div class="sv rd">${maxDD.toFixed(1)}%</div><div class="ss">${fmt(maxDDAbs,true)} peak-to-trough</div></div>
+    <div class="stat"><div class="slb">Current DD</div><div class="sv ${recovering?'rd':'gn'}">${recovering?(((cum-peak)/peak*100).toFixed(1)+'%'):'0%'}</div><div class="ss">${recovering?'recovering':'at peak'}</div></div>
+    <div class="stat"><div class="slb">Peak P&L</div><div class="sv ${peak>=0?'gn':'rd'}">${fmt(peak,true)}</div><div class="ss">all-time high</div></div>
+    <div class="stat"><div class="slb">Current P&L</div><div class="sv ${cum>=0?'gn':'rd'}">${fmt(cum,true)}</div><div class="ss">running total</div></div>`;
+  if(ddI)ddI.destroy();
+  const ctx=document.getElementById('ddC').getContext('2d');
+  const gr=ctx.createLinearGradient(0,0,0,180);
+  gr.addColorStop(0,'rgba(232,67,79,0.25)');gr.addColorStop(1,'rgba(232,67,79,0)');
+  ddI=new Chart(ctx,{type:'line',data:{labels,datasets:[{data:ddVals,borderColor:'#e8434f',borderWidth:1.5,tension:0.3,pointRadius:0,fill:true,backgroundColor:gr}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw.toFixed(2)+'%'}}},scales:{x:{ticks:{color:'rgba(255,255,255,0.28)',font:{size:8},maxRotation:0,autoSkip:true,maxTicksLimit:8},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'rgba(255,255,255,0.28)',font:{size:8},callback:v=>v.toFixed(1)+'%'},grid:{color:'rgba(255,255,255,0.04)'}}}}});
+  document.getElementById('ddEvents').innerHTML=events.length?
+    events.map(e=>`<div class="dd-row"><div class="dd-date">${fmtDate(e.start)} → ${fmtDate(e.end)}</div><div class="dd-val rd">recovered</div></div>`).join('')+(recovering?`<div class="dd-row"><div class="dd-date">Active since last peak</div><div class="dd-val rd">in progress</div></div>`:''):
+    '<div style="font-size:11px;color:var(--mt)">No significant drawdown events.</div>';
+}
+
+// ---- SUMMARY ----
+function renderSummary(){
+  if(!trades.length){document.getElementById('summaryContent').innerHTML='<div class="panel" style="font-size:11px;color:var(--mt)">No trades yet.</div>';return;}
+  // group by year then month
+  const byYM={};
+  trades.forEach(t=>{
+    const [y,m]=t.date.split('-');
+    const yk=y;const mk=y+'-'+m;
+    if(!byYM[yk])byYM[yk]={};
+    if(!byYM[yk][mk])byYM[yk][mk]={pnl:0,wins:0,losses:0,trades:[]};
+    byYM[yk][mk].pnl+=t.pnl;
+    if(t.pnl>0)byYM[yk][mk].wins++;
+    else if(t.pnl<0)byYM[yk][mk].losses++;
+    byYM[yk][mk].trades.push(t);
+  });
+  // per-symbol stats
+  const bySym={};
+  trades.forEach(t=>{
+    if(!bySym[t.sym])bySym[t.sym]={pnl:0,wins:0,losses:0,count:0};
+    bySym[t.sym].pnl+=t.pnl;bySym[t.sym].count++;
+    if(t.pnl>0)bySym[t.sym].wins++;else if(t.pnl<0)bySym[t.sym].losses++;
+  });
+  const symEntries=Object.entries(bySym).sort((a,b)=>b[1].pnl-a[1].pnl);
+  const years=Object.keys(byYM).sort().reverse();
+
+  let html=`<div class="panel">
+    <div class="plb">Performance by symbol</div>
+    <div style="display:grid;grid-template-columns:80px 1fr 60px 40px 40px;gap:6px;margin-bottom:6px;padding-bottom:6px;border-bottom:0.5px solid var(--bd)">
+      <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em">Symbol</div>
+      <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em">P&L bar</div>
+      <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em;text-align:right">Net P&L</div>
+      <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em;text-align:center">W</div>
+      <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em;text-align:center">L</div>
+    </div>`;
+  const maxAbsSym=Math.max(...symEntries.map(([,v])=>Math.abs(v.pnl)),1);
+  symEntries.forEach(([sym,v])=>{
+    const pct=Math.round(Math.abs(v.pnl)/maxAbsSym*100);
+    html+=`<div style="display:grid;grid-template-columns:80px 1fr 60px 40px 40px;gap:6px;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--bd)">
+      <div style="font-size:11px;font-weight:500">${sym}</div>
+      <div class="bar-bg"><div class="bar-f" style="width:${pct}%;background:${v.pnl>=0?'var(--g)':'var(--r)'}"></div></div>
+      <div style="font-size:11px;font-weight:500;text-align:right;${v.pnl>=0?'color:var(--g)':'color:var(--r)'}">${fmt(v.pnl,true)}</div>
+      <div style="font-size:11px;text-align:center;color:var(--g)">${v.wins}</div>
+      <div style="font-size:11px;text-align:center;color:var(--r)">${v.losses}</div>
+    </div>`;
+  });
+  html+='</div>';
+
+  years.forEach(yr=>{
+    const months=Object.keys(byYM[yr]).sort();
+    const yearTotal=months.reduce((s,mk)=>s+byYM[yr][mk].pnl,0);
+    const yearWins=months.reduce((s,mk)=>s+byYM[yr][mk].wins,0);
+    const yearLosses=months.reduce((s,mk)=>s+byYM[yr][mk].losses,0);
+    const yearWr=yearWins+yearLosses>0?Math.round(yearWins/(yearWins+yearLosses)*100):0;
+    html+=`<div class="yr-block"><div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:14px;font-weight:500">${yr}</div>
+        <div style="display:flex;gap:16px;font-size:11px">
+          <span>Total: <strong style="${yearTotal>=0?'color:var(--g)':'color:var(--r)'}">${yearTotal>=0?'+':''}${fmt(yearTotal,true)}</strong></span>
+          <span style="color:var(--mt)">${yearWr}% win rate · ${yearWins}W ${yearLosses}L</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:90px 1fr 70px 40px 40px;gap:6px;padding-bottom:6px;border-bottom:0.5px solid var(--bd);margin-bottom:4px">
+        <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em">Month</div>
+        <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em">P&L bar</div>
+        <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em;text-align:right">Net P&L</div>
+        <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em;text-align:center">W</div>
+        <div style="font-size:9px;color:var(--mt);text-transform:uppercase;letter-spacing:0.06em;text-align:center">L</div>
+      </div>`;
+    const maxAbs=Math.max(...months.map(mk=>Math.abs(byYM[yr][mk].pnl)),1);
+    months.forEach(mk=>{
+      const mo=byYM[yr][mk];const mn2=parseInt(mk.split('-')[1])-1;
+      const pct=Math.round(Math.abs(mo.pnl)/maxAbs*100);
+      html+=`<div style="display:grid;grid-template-columns:90px 1fr 70px 40px 40px;gap:6px;align-items:center;padding:5px 0;border-bottom:0.5px solid var(--bd)">
+        <div style="font-size:11px">${MN[mn2].slice(0,3)} ${yr.slice(2)}</div>
+        <div class="bar-bg"><div class="bar-f" style="width:${pct}%;background:${mo.pnl>=0?'var(--g)':'var(--r)'}"></div></div>
+        <div style="font-size:11px;font-weight:500;text-align:right;${mo.pnl>=0?'color:var(--g)':'color:var(--r)'}">${mo.pnl>=0?'+':''}${fmt(mo.pnl,true)}</div>
+        <div style="font-size:11px;text-align:center;color:var(--g)">${mo.wins}</div>
+        <div style="font-size:11px;text-align:center;color:var(--r)">${mo.losses}</div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  document.getElementById('summaryContent').innerHTML=html;
+}
+
+document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+document.getElementById('n-date').value=new Date().toISOString().slice(0,10);
+renderDash();
+</script>
+</body>
+</html>
