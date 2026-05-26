@@ -181,6 +181,8 @@ textarea{resize:vertical;min-height:70px}
       <span class="save-dot" id="saveDot"></span>
       <span id="saveLabel" style="margin-left:5px"></span>
     </span>
+    <button class="btn" style="padding:4px 10px;font-size:9px;background:var(--s2);border:0.5px solid var(--bd);color:#e8e8e8" onclick="document.getElementById('importBackupInput').click()">📂 Import Backup</button>
+    <input type="file" id="importBackupInput" accept=".json" style="display:none" onchange="importBackup(event)"/>
     <button class="btn danger" style="padding:4px 10px;font-size:9px" onclick="clearAllData()">Clear data</button>
   </div>
 </div>
@@ -398,6 +400,37 @@ function flashSave(){
   const dot=document.getElementById('saveDot'),lbl=document.getElementById('saveLabel');
   dot.classList.add('show');lbl.textContent='saved';
   clearTimeout(window._st);window._st=setTimeout(()=>{dot.classList.remove('show');lbl.textContent='';},2000);
+}
+function importBackup(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      // Support both old format {trades,notes} and new full format {v1,v2,notes}
+      let allTrades=[];
+      if(data.v1||data.v2){
+        const v1=data.v1?(typeof data.v1==='string'?JSON.parse(data.v1):data.v1):[];
+        const v2=data.v2?(typeof data.v2==='string'?JSON.parse(data.v2):data.v2):[];
+        allTrades=[...v1,...v2];
+      } else {
+        const t=data.trades;
+        allTrades=typeof t==='string'?JSON.parse(t):t;
+      }
+      const importedNotes=data.notes?(typeof data.notes==='string'?JSON.parse(data.notes):data.notes):{};
+      if(!Array.isArray(allTrades))throw new Error('Invalid trades data');
+      if(trades.length>0&&!confirm('You already have '+trades.length+' trade(s). Merge with imported data?'))return;
+      const existingIds=new Set(trades.map(t=>t.id));
+      const newTrades=allTrades.filter(t=>!existingIds.has(t.id));
+      trades=[...trades,...newTrades];
+      Object.assign(notes,importedNotes);
+      saveData();
+      renderDash();renderAllTrades();renderNotes();renderDD();
+      showToast('Imported '+newTrades.length+' trade(s) + notes ✓');
+    }catch(err){showToast('Import failed: '+err.message);}
+    e.target.value='';
+  };
+  reader.readAsText(file);
 }
 function clearAllData(){
   if(!confirm('Delete ALL trades and notes? This cannot be undone.'))return;
