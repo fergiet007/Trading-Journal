@@ -181,6 +181,7 @@ textarea{resize:vertical;min-height:70px}
       <span class="save-dot" id="saveDot"></span>
       <span id="saveLabel" style="margin-left:5px"></span>
     </span>
+    <button class="btn" style="padding:4px 10px;font-size:9px;background:var(--s2);border:0.5px solid var(--bd);color:#e8e8e8" onclick="exportBackup()">💾 Export Backup</button>
     <button class="btn" style="padding:4px 10px;font-size:9px;background:var(--s2);border:0.5px solid var(--bd);color:#e8e8e8" onclick="document.getElementById('importBackupInput').click()">📂 Import Backup</button>
     <input type="file" id="importBackupInput" accept=".json" style="display:none" onchange="importBackup(event)"/>
     <button class="btn danger" style="padding:4px 10px;font-size:9px" onclick="clearAllData()">Clear data</button>
@@ -400,6 +401,15 @@ function flashSave(){
   const dot=document.getElementById('saveDot'),lbl=document.getElementById('saveLabel');
   dot.classList.add('show');lbl.textContent='saved';
   clearTimeout(window._st);window._st=setTimeout(()=>{dot.classList.remove('show');lbl.textContent='';},2000);
+}
+function exportBackup(){
+  const data={v1:JSON.stringify(trades),notes:JSON.stringify(notes)};
+  const blob=new Blob([JSON.stringify(data)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const d=new Date();
+  a.download='sk_trader_backup_'+d.getFullYear()+''+String(d.getMonth()+1).padStart(2,'0')+''+String(d.getDate()).padStart(2,'0')+'.json';
+  a.click();
 }
 function importBackup(e){
   const file=e.target.files[0];if(!file)return;
